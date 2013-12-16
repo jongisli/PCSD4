@@ -1,10 +1,13 @@
 package com.acertainbookstore.business;
 
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Future;
 
 import com.acertainbookstore.interfaces.ReplicatedReadOnlyBookStore;
 import com.acertainbookstore.interfaces.ReplicatedReadOnlyStockManager;
 import com.acertainbookstore.utils.BookStoreException;
+import com.acertainbookstore.utils.BookStoreMessageTag;
 import com.acertainbookstore.utils.BookStoreResult;
 
 /**
@@ -63,5 +66,38 @@ public class SlaveCertainBookStore implements ReplicatedReadOnlyBookStore,
 				bookStore.getEditorPicks(numBooks), snapshotId);
 		return result;
 	}
+	
+	public synchronized BookStoreResult addBooks(Set<StockBook> bookSet)
+			throws BookStoreException {
+		bookStore.addBooks(bookSet); // If this fails it will throw an exception
+		snapshotId++;
+		BookStoreResult result = new BookStoreResult(null, snapshotId);
+		return result;
+	}
+	
+	public synchronized BookStoreResult addCopies(Set<BookCopy> bookCopiesSet)
+			throws BookStoreException {
+		bookStore.addCopies(bookCopiesSet);
+		snapshotId ++;
+		BookStoreResult result = new BookStoreResult(null, snapshotId);
+		return result;
+	}
+	public synchronized BookStoreResult updateEditorPicks(Set<BookEditorPick> editorPicks)
+			throws BookStoreException {
+		bookStore.updateEditorPicks(editorPicks);
+		snapshotId ++;
+		BookStoreResult result = new BookStoreResult(null, snapshotId);
+		return result;
+	}
+	
+	public synchronized BookStoreResult buyBooks(Set<BookCopy> bookCopiesToBuy)
+			throws BookStoreException {
+		bookStore.buyBooks(bookCopiesToBuy);
+		snapshotId ++;
+		BookStoreResult result = new BookStoreResult(null, snapshotId);
+		return result;
+	}
+
+		
 
 }

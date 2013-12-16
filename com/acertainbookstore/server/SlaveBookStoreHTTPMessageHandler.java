@@ -14,7 +14,11 @@ import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
+import com.acertainbookstore.business.BookCopy;
+import com.acertainbookstore.business.BookEditorPick;
+import com.acertainbookstore.business.MasterCertainBookStore;
 import com.acertainbookstore.business.SlaveCertainBookStore;
+import com.acertainbookstore.business.StockBook;
 import com.acertainbookstore.utils.BookStoreConstants;
 import com.acertainbookstore.utils.BookStoreException;
 import com.acertainbookstore.utils.BookStoreMessageTag;
@@ -112,6 +116,87 @@ public class SlaveBookStoreHTTPMessageHandler extends AbstractHandler {
 						BookStoreUtility
 								.serializeObjectToXMLString(bookStoreresponse));
 				break;
+				
+			case ADDBOOKS:
+				xml = BookStoreUtility
+						.extractPOSTDataFromRequest(request);
+
+				Set<StockBook> bookSet = (Set<StockBook>) BookStoreUtility
+						.deserializeXMLStringToObject(xml);
+
+				bookStoreresponse = new BookStoreResponse();
+				try {
+					bookStoreresponse.setResult(SlaveCertainBookStore
+							.getInstance().addBooks(bookSet));
+				} catch (BookStoreException ex) {
+					bookStoreresponse.setException(ex);
+				}
+
+				response.getWriter().println(
+						BookStoreUtility
+								.serializeObjectToXMLString(bookStoreresponse));
+				break;
+				
+			case ADDCOPIES:
+				xml = BookStoreUtility
+						.extractPOSTDataFromRequest(request);
+
+				Set<BookCopy> listBookCopies = (Set<BookCopy>) BookStoreUtility
+						.deserializeXMLStringToObject(xml);
+
+				bookStoreresponse = new BookStoreResponse();
+				try {
+					bookStoreresponse.setResult(SlaveCertainBookStore
+							.getInstance().addCopies(listBookCopies));
+				} catch (BookStoreException ex) {
+					bookStoreresponse.setException(ex);
+				}
+
+				response.getWriter().println(
+						BookStoreUtility
+								.serializeObjectToXMLString(bookStoreresponse));
+				break;
+				
+			case UPDATEEDITORPICKS:
+
+				String xmlStringEditorPicksValues = BookStoreUtility
+						.extractPOSTDataFromRequest(request);
+
+				Set<BookEditorPick> mapEditorPicksValues = (Set<BookEditorPick>) BookStoreUtility
+						.deserializeXMLStringToObject(xmlStringEditorPicksValues);
+				bookStoreresponse = new BookStoreResponse();
+
+				try {
+					bookStoreresponse.setResult(SlaveCertainBookStore
+							.getInstance().updateEditorPicks(
+									mapEditorPicksValues));
+				} catch (BookStoreException ex) {
+					bookStoreresponse.setException(ex);
+				}
+				response.getWriter().println(
+						BookStoreUtility
+								.serializeObjectToXMLString(bookStoreresponse));
+				break;
+
+			case BUYBOOKS:
+				xml = BookStoreUtility.extractPOSTDataFromRequest(request);
+				Set<BookCopy> bookCopiesToBuy = (Set<BookCopy>) BookStoreUtility
+						.deserializeXMLStringToObject(xml);
+
+				// Make the purchase
+				bookStoreresponse = new BookStoreResponse();
+				try {
+					bookStoreresponse.setResult(SlaveCertainBookStore
+							.getInstance().buyBooks(bookCopiesToBuy));
+				} catch (BookStoreException ex) {
+					bookStoreresponse.setException(ex);
+				}
+				response.getWriter().println(
+						BookStoreUtility
+								.serializeObjectToXMLString(bookStoreresponse));
+				break;
+
+
 
 			default:
 				System.out.println("Unhandled message tag");

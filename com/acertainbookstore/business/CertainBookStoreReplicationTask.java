@@ -1,8 +1,17 @@
 package com.acertainbookstore.business;
 
+import java.util.Set;
 import java.util.concurrent.Callable;
 
+import org.eclipse.jetty.client.ContentExchange;
+import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.io.Buffer;
+import org.eclipse.jetty.io.ByteArrayBuffer;
+
+import com.acertainbookstore.server.ReplicationHTTPProxy;
 import com.acertainbookstore.utils.BookStoreMessageTag;
+import com.acertainbookstore.utils.BookStoreResult;
+import com.acertainbookstore.utils.BookStoreUtility;
 
 /**
  * CertainBookStoreReplicationTask performs replication to a slave server. It
@@ -13,8 +22,9 @@ public class CertainBookStoreReplicationTask implements
 	
 	private String slaveServer;
 	private ReplicationRequest request;
+	private ReplicationHTTPProxy replicationProxy;
 
-	public CertainBookStoreReplicationTask(String slaveServer, ReplicationRequest request) {
+	public CertainBookStoreReplicationTask(String slaveServer, ReplicationRequest request, ReplicationHTTPProxy replicationProxy) {
 		this.slaveServer = slaveServer;
 		this.request = request;
 	}
@@ -22,7 +32,20 @@ public class CertainBookStoreReplicationTask implements
 	@Override
 	public ReplicationResult call() throws Exception {
 		BookStoreMessageTag messageTag = request.getMessageType();
-		return null;
+		ReplicationResult replicationResult = new ReplicationResult(slaveServer, false);
+		
+		switch (messageTag)
+		{
+			case ADDBOOKS:
+				Set<StockBook> bookSet = (Set<StockBook>) request.getDataSet();
+				replicationResult = replicationProxy.addBooks(bookSet, slaveServer);
+			case ADDCOPIES:
+				break;
+			default:
+				break;
+		}
+		
+		return replicationResult;
 		
 	}
 

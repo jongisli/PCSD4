@@ -1,9 +1,14 @@
 package com.acertainbookstore.business;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import com.acertainbookstore.client.ReplicationAwareBookStoreHTTPProxy;
+import com.acertainbookstore.client.ReplicationAwareStockManagerHTTPProxy;
 import com.acertainbookstore.interfaces.Replicator;
 
 /**
@@ -12,14 +17,24 @@ import com.acertainbookstore.interfaces.Replicator;
  */
 public class CertainBookStoreReplicator implements Replicator {
 
+	private ExecutorService exec;
+	
 	public CertainBookStoreReplicator(int maxReplicatorThreads) {
-		// TODO:Implement this constructor
+		// We initialize an executor service which spawns threads
+		// to process the replication requests.
+		this.exec = Executors.newFixedThreadPool(maxReplicatorThreads);
 	}
 
 	public List<Future<ReplicationResult>> replicate(Set<String> slaveServers,
 			ReplicationRequest request) {
-		// TODO: Implement this method
-		return null;
+		List<Future<ReplicationResult>> results = new ArrayList<Future<ReplicationResult>>();
+		
+		for (String server : slaveServers)
+		{
+			CertainBookStoreReplicationTask task = new CertainBookStoreReplicationTask(server, request);
+			results.add(exec.submit(task));
+		}
+		
+		return results;
 	}
-
 }

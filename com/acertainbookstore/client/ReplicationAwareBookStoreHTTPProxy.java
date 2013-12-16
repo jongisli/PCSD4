@@ -10,6 +10,7 @@ import java.net.URLEncoder;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
+import java.util.Random;
 import java.util.Set;
 
 import org.eclipse.jetty.client.ContentExchange;
@@ -39,7 +40,7 @@ public class ReplicationAwareBookStoreHTTPProxy implements BookStore {
 	private HttpClient client;
 	private Set<String> slaveAddresses;
 	private String masterAddress;
-	private String filePath = "/universe/pcsd/acertainbookstore/src/proxy.properties";
+	private String filePath = "/Users/BEN/Documents/workspace/PCSDAssignment4/src/proxy.properties";
 	private volatile long snapshotId = 0;
 
 	public long getSnapshotId() {
@@ -101,8 +102,36 @@ public class ReplicationAwareBookStoreHTTPProxy implements BookStore {
 		}
 	}
 
+	
 	public String getReplicaAddress() {
-		return ""; // TODO
+		
+		// We set the slave address has the double probability as master address, 
+		// and divide the range [0, 1] into masterAddress part and slaveAddress part. 
+		// Firstly, we randomly generate a number in [0, 1], if the number is in slaveAddress
+		// probability part, we randomly return a slaveAddress; otherwise, we return the masterAddress. 
+		int sizeOfSlave = slaveAddresses.size();
+		Random random = new Random();
+		String returnSlaveAddress = new String();
+		float range = (float) 1/(1 + 2*sizeOfSlave);
+		
+		float probability = random.nextFloat();
+		if (probability > range){
+			
+			int randomIdx = new Random().nextInt(sizeOfSlave);
+			int i = 0;
+			for(String obj : slaveAddresses)
+			{
+			    if (i == randomIdx)
+			        returnSlaveAddress =  obj;
+			    i = i + 1;
+			}
+			
+			return returnSlaveAddress;
+		}
+		else{
+			return masterAddress;
+		}
+		
 	}
 
 	public String getMasterServerAddress() {

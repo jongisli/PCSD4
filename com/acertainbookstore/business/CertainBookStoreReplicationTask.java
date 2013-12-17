@@ -27,6 +27,7 @@ public class CertainBookStoreReplicationTask implements
 	public CertainBookStoreReplicationTask(String slaveServer, ReplicationRequest request, ReplicationHTTPProxy replicationProxy) {
 		this.slaveServer = slaveServer;
 		this.request = request;
+		this.replicationProxy = replicationProxy;
 	}
 
 	@Override

@@ -26,8 +26,8 @@ public class ReplicationHTTPProxy {
 		// TODO: Put parameters as settings somewhere
 		replicatorClient = new HttpClient();
 		replicatorClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
-		replicatorClient.setMaxConnectionsPerAddress(10);
-		replicatorClient.setThreadPool(new QueuedThreadPool(10));
+		replicatorClient.setMaxConnectionsPerAddress(200);
+		replicatorClient.setThreadPool(new QueuedThreadPool(250));
 		replicatorClient.setTimeout(3000); 
 		
 		try {
@@ -42,7 +42,7 @@ public class ReplicationHTTPProxy {
 		String listBooksxmlString = BookStoreUtility.serializeObjectToXMLString(bookSet);
 		Buffer requestContent = new ByteArrayBuffer(listBooksxmlString);
 		ContentExchange exchange = new ContentExchange();
-		String urlString = slaveServer + "/" + BookStoreMessageTag.ADDBOOKS;
+		String urlString = slaveServer + BookStoreMessageTag.ADDBOOKS;
 		
 		exchange.setMethod("POST");
 		exchange.setURL(urlString);
@@ -61,7 +61,7 @@ public class ReplicationHTTPProxy {
 		String listBookCopiesxmlString = BookStoreUtility.serializeObjectToXMLString(bookCopySet);
 		Buffer requestContent = new ByteArrayBuffer(listBookCopiesxmlString);
 		ContentExchange exchange = new ContentExchange();
-		String urlString = slaveServer + "/" + BookStoreMessageTag.ADDCOPIES;
+		String urlString = slaveServer + BookStoreMessageTag.ADDCOPIES;
 		
 		exchange.setMethod("POST");
 		exchange.setURL(urlString);
@@ -80,7 +80,7 @@ public class ReplicationHTTPProxy {
 		String bookEditorPicksxmlString = BookStoreUtility.serializeObjectToXMLString(bookEditorPicksSet);
 		Buffer requestContent = new ByteArrayBuffer(bookEditorPicksxmlString);
 		ContentExchange exchange = new ContentExchange();
-		String urlString = slaveServer + "/" + BookStoreMessageTag.UPDATEEDITORPICKS;
+		String urlString = slaveServer + BookStoreMessageTag.UPDATEEDITORPICKS;
 		
 		exchange.setMethod("POST");
 		exchange.setURL(urlString);
@@ -99,7 +99,7 @@ public class ReplicationHTTPProxy {
 		String listBookCopiesxmlString = BookStoreUtility.serializeObjectToXMLString(bookCopySet);
 		Buffer requestContent = new ByteArrayBuffer(listBookCopiesxmlString);
 		ContentExchange exchange = new ContentExchange();
-		String urlString = slaveServer + "/" + BookStoreMessageTag.BUYBOOKS;
+		String urlString = slaveServer + BookStoreMessageTag.BUYBOOKS;
 		
 		exchange.setMethod("POST");
 		exchange.setURL(urlString);

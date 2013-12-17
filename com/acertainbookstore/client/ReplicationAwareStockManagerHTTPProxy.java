@@ -38,7 +38,7 @@ public class ReplicationAwareStockManagerHTTPProxy implements StockManager {
 	private HttpClient client;
 	private Set<String> slaveAddresses;
 	private String masterAddress;
-	private String filePath = "/Users/BEN/Documents/workspace/PCSDAssignment4/src/proxy.properties";
+	private String filePath = "src/proxy.properties";
 	private long snapshotId = 0;
 
 	/**

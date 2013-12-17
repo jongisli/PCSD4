@@ -36,12 +36,22 @@ public class CertainBookStoreReplicationTask implements
 		
 		switch (messageTag)
 		{
-			case ADDBOOKS:
+			case ADDBOOKS: {
 				Set<StockBook> bookSet = (Set<StockBook>) request.getDataSet();
 				replicationResult = replicationProxy.addBooks(bookSet, slaveServer);
-			case ADDCOPIES:
+			}
+			case ADDCOPIES: {
 				Set<BookCopy> bookCopySet = (Set<BookCopy>) request.getDataSet();
-				replicationResult = replicationProxy.addCopies(bookCopySet, slaveServer);
+				replicationResult = replicationProxy.addCopies(bookCopySet, slaveServer); 
+			}
+			case UPDATEEDITORPICKS: {
+				Set<BookEditorPick> bookEditorPicksSet = (Set<BookEditorPick>) request.getDataSet();
+				replicationResult = replicationProxy.updateEditorPicks(bookEditorPicksSet, slaveServer);
+			}
+			case BUYBOOKS: {
+				Set<BookCopy> bookCopySet = (Set<BookCopy>) request.getDataSet();
+				replicationResult = replicationProxy.buyBooks(bookCopySet, slaveServer); 
+			}
 			default:
 				break;
 		}

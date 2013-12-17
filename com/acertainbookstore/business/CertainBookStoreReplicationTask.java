@@ -40,7 +40,8 @@ public class CertainBookStoreReplicationTask implements
 				Set<StockBook> bookSet = (Set<StockBook>) request.getDataSet();
 				replicationResult = replicationProxy.addBooks(bookSet, slaveServer);
 			case ADDCOPIES:
-				break;
+				Set<BookCopy> bookCopySet = (Set<BookCopy>) request.getDataSet();
+				replicationResult = replicationProxy.addCopies(bookCopySet, slaveServer);
 			default:
 				break;
 		}

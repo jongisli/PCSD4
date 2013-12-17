@@ -7,12 +7,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.util.thread.QueuedThreadPool;
-
-import com.acertainbookstore.client.BookStoreClientConstants;
-import com.acertainbookstore.client.ReplicationAwareBookStoreHTTPProxy;
-import com.acertainbookstore.client.ReplicationAwareStockManagerHTTPProxy;
 import com.acertainbookstore.interfaces.Replicator;
 import com.acertainbookstore.server.ReplicationHTTPProxy;
 

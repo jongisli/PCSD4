@@ -40,6 +40,8 @@ public class ReplicationAwareStockManagerHTTPProxy implements StockManager {
 	private String masterAddress;
 	private String filePath = "src/proxy.properties";
 	private long snapshotId = 0;
+	
+	private final static int SECOND=5000; 
 
 	/**
 	 * Initialize the client object
@@ -172,6 +174,7 @@ public class ReplicationAwareStockManagerHTTPProxy implements StockManager {
 	public List<StockBook> getBooks() throws BookStoreException {
 
 		BookStoreResult result = null;
+		long getBooksStart = System.currentTimeMillis();
 		do {
 			ContentExchange exchange = new ContentExchange();
 			String urlString = getReplicaAddress() + "/"
@@ -179,6 +182,10 @@ public class ReplicationAwareStockManagerHTTPProxy implements StockManager {
 
 			exchange.setURL(urlString);
 			result = BookStoreUtility.SendAndRecv(this.client, exchange);
+			
+			long getBooksEnd = System.currentTimeMillis();
+			if (getBooksEnd - getBooksStart > SECOND)
+				throw new BookStoreException();
 		} while (result.getSnapshotId() < this.getSnapshotId());
 		this.setSnapshotId(result.getSnapshotId());
 		return (List<StockBook>) result.getResultList();

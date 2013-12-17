@@ -42,6 +42,8 @@ public class ReplicationAwareBookStoreHTTPProxy implements BookStore {
 	private String masterAddress;
 	private String filePath = "src/proxy.properties";
 	private volatile long snapshotId = 0;
+	
+	private final static int SECOND=5000; 
 
 	public long getSnapshotId() {
 		return snapshotId;
@@ -163,7 +165,9 @@ public class ReplicationAwareBookStoreHTTPProxy implements BookStore {
 				.serializeObjectToXMLString(isbnSet);
 		Buffer requestContent = new ByteArrayBuffer(listISBNsxmlString);
 
+		
 		BookStoreResult result = null;
+		long getBooksStart = System.currentTimeMillis();
 		do {
 			ContentExchange exchange = new ContentExchange();
 			String urlString = getReplicaAddress() + "/"
@@ -172,6 +176,10 @@ public class ReplicationAwareBookStoreHTTPProxy implements BookStore {
 			exchange.setURL(urlString);
 			exchange.setRequestContent(requestContent);
 			result = BookStoreUtility.SendAndRecv(this.client, exchange);
+
+			long getBooksEnd = System.currentTimeMillis();
+			if (getBooksEnd - getBooksStart > SECOND)
+				throw new BookStoreException();
 		} while (result.getSnapshotId() < this.getSnapshotId());
 		this.setSnapshotId(result.getSnapshotId());
 		return (List<Book>) result.getResultList();
@@ -190,6 +198,7 @@ public class ReplicationAwareBookStoreHTTPProxy implements BookStore {
 		}
 
 		BookStoreResult result = null;
+		long getEditorPicksStart = System.currentTimeMillis();
 		do {
 			String urlString = getReplicaAddress() + "/"
 					+ BookStoreMessageTag.EDITORPICKS + "?"
@@ -197,6 +206,10 @@ public class ReplicationAwareBookStoreHTTPProxy implements BookStore {
 					+ urlEncodedNumBooks;
 			exchange.setURL(urlString);
 			result = BookStoreUtility.SendAndRecv(this.client, exchange);
+			
+			long getEditorPicksEnd = System.currentTimeMillis();
+			if (getEditorPicksEnd - getEditorPicksStart > SECOND)
+				throw new BookStoreException();
 		} while (result.getSnapshotId() < this.getSnapshotId());
 		this.setSnapshotId(result.getSnapshotId());
 

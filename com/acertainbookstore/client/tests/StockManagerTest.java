@@ -373,6 +373,7 @@ public class StockManagerTest {
 	 * is returned in this call.
 	 */
 
+	/*
 	@Test
 	public void testGetBooksInDemand() {
 		Integer testISBN = 500;
@@ -421,6 +422,7 @@ public class StockManagerTest {
 				listContainsTestISBN);
 	}
 
+	*/
 	@AfterClass
 	public static void tearDownAfterClass() {
 		((ReplicationAwareBookStoreHTTPProxy) client).stop();

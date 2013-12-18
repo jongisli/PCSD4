@@ -112,8 +112,11 @@ public class ReplicationAwareStockManagerHTTPProxy implements StockManager {
 		Random random = new Random();
 		String returnSlaveAddress = new String();
 		
+		if(slaveAddresses.isEmpty()) {
+			return masterAddress;
+		}
+		
 		if (random.nextFloat() > 1/(1 + 2*sizeOfSlave) || masterUp == false){
-			
 			int randomIdx = new Random().nextInt(sizeOfSlave);
 			int i = 0;
 			for(String obj : slaveAddresses)
@@ -198,8 +201,8 @@ public class ReplicationAwareStockManagerHTTPProxy implements StockManager {
 				}
 				
 				if(!randomServer.equals(masterAddress)) {
-					slaveAddresses.remove(randomServer);
 					if(!slaveAddresses.isEmpty()) {
+						slaveAddresses.remove(randomServer);
 						return this.getBooks();
 					}
 				} else {

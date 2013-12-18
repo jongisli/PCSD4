@@ -118,6 +118,10 @@ public class ReplicationAwareBookStoreHTTPProxy implements BookStore {
 		String returnSlaveAddress = new String();
 		float range = (float) 1/(1 + 2*sizeOfSlave);
 		
+		if(slaveAddresses.isEmpty()) {
+			return masterAddress;
+		}
+		
 		float probability = random.nextFloat();
 		if (probability > range || masterUp == false){
 			
@@ -200,8 +204,8 @@ public class ReplicationAwareBookStoreHTTPProxy implements BookStore {
 				}
 				
 				if(!randomServer.equals(masterAddress)) {
-					slaveAddresses.remove(randomServer);
 					if(!slaveAddresses.isEmpty()) {
+						slaveAddresses.remove(randomServer);
 						return this.getBooks(isbnSet);
 					}
 				} else {
@@ -253,8 +257,8 @@ public class ReplicationAwareBookStoreHTTPProxy implements BookStore {
 				}
 				
 				if(!randomServer.equals(masterAddress)) {
-					slaveAddresses.remove(randomServer);
 					if(!slaveAddresses.isEmpty()) {
+						slaveAddresses.remove(randomServer);
 						return this.getEditorPicks(numBooks);
 					}
 				} else {

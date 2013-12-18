@@ -191,19 +191,21 @@ public class ReplicationAwareStockManagerHTTPProxy implements StockManager {
 				if (ex instanceof BookStoreException)
 				{
 					BookStoreException bsEx = (BookStoreException) ex;
-					if (bsEx.getMessage() != BookStoreClientConstants.strERR_CLIENT_REQUEST_TIMEOUT)
+					if (bsEx.getMessage() != BookStoreClientConstants.strERR_CLIENT_REQUEST_TIMEOUT &&
+					  bsEx.getMessage() != BookStoreClientConstants.strERR_CLIENT_REQUEST_EXCEPTION) {
 						throw bsEx;
+					}
 				}
 				
 				if(!randomServer.equals(masterAddress)) {
 					slaveAddresses.remove(randomServer);
 					if(!slaveAddresses.isEmpty()) {
-						getBooks();
+						return this.getBooks();
 					}
 				} else {
 					masterUp = false;
 					if(!slaveAddresses.isEmpty()) {
-						getBooks();
+						return this.getBooks();
 					}
 				}	
 			}

@@ -170,28 +170,12 @@ public class ReplicationAwareBookStoreHTTPProxy implements BookStore {
 		long getBooksStart = System.currentTimeMillis();
 		do {
 			ContentExchange exchange = new ContentExchange();
-			String slaveAddress = getReplicaAddress();
-			String urlString = slaveAddress + "/"
+			String urlString = getReplicaAddress() + "/"
 					+ BookStoreMessageTag.GETBOOKS;
 			exchange.setMethod("POST");
 			exchange.setURL(urlString);
 			exchange.setRequestContent(requestContent);
-			try {
-				result = BookStoreUtility.SendAndRecv(this.client, exchange);
-			}
-			catch (Exception ex)
-			{
-				if (ex instanceof BookStoreException)
-				{
-					BookStoreException bsEx = (BookStoreException) ex;
-					if (bsEx.getMessage() != BookStoreClientConstants.strERR_CLIENT_REQUEST_TIMEOUT)
-						throw bsEx;
-				}
-					
-				if (isSlave(slaveAddress))
-				slaveAddresses.remove(slaveAddress);
-				this.getBooks(isbnSet);
-			}
+			result = BookStoreUtility.SendAndRecv(this.client, exchange);
 
 			long getBooksEnd = System.currentTimeMillis();
 			if (getBooksEnd - getBooksStart > SECOND)

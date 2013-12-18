@@ -173,7 +173,6 @@ public class ReplicationAwareBookStoreHTTPProxy implements BookStore {
 		long getBooksStart = System.currentTimeMillis();
 		
 		do {
-			
 			ContentExchange exchange = new ContentExchange();
 			String randomServer = getReplicaAddress();
 			String urlString = randomServer + "/"
@@ -181,25 +180,34 @@ public class ReplicationAwareBookStoreHTTPProxy implements BookStore {
 			exchange.setMethod("POST");
 			exchange.setURL(urlString);
 			exchange.setRequestContent(requestContent);
+			
+			//Here we see if the caught exception is a timeout, which would mean the server 
+			//belonging to the received address has failed. If it was a slave server, we remove it
+			//from the Set of slaveServers and run the method again.
+			//If it was a master server that failed, it is flagged as failed and function is
+			//called again. 
+			//This is done for all read methods in both proxies to achieve the fail-stop model
+			//between proxies and servers
 			try {
 				result = BookStoreUtility.SendAndRecv(this.client, exchange);
 			} catch (Exception ex) {
 				if (ex instanceof BookStoreException)
 				{
 					BookStoreException bsEx = (BookStoreException) ex;
-					if (bsEx.getMessage() != BookStoreClientConstants.strERR_CLIENT_REQUEST_TIMEOUT)
+					if (bsEx.getMessage() != BookStoreClientConstants.strERR_CLIENT_REQUEST_TIMEOUT &&
+							  bsEx.getMessage() != BookStoreClientConstants.strERR_CLIENT_REQUEST_EXCEPTION)
 						throw bsEx;
 				}
 				
 				if(!randomServer.equals(masterAddress)) {
 					slaveAddresses.remove(randomServer);
 					if(!slaveAddresses.isEmpty()) {
-						getBooks(isbnSet);
+						return this.getBooks(isbnSet);
 					}
 				} else {
 					masterUp = false;
 					if(!slaveAddresses.isEmpty()) {
-						getBooks(isbnSet);
+						return this.getBooks(isbnSet);
 					}
 				}	
 			}
@@ -239,19 +247,20 @@ public class ReplicationAwareBookStoreHTTPProxy implements BookStore {
 				if (ex instanceof BookStoreException)
 				{
 					BookStoreException bsEx = (BookStoreException) ex;
-					if (bsEx.getMessage() != BookStoreClientConstants.strERR_CLIENT_REQUEST_TIMEOUT)
+					if (bsEx.getMessage() != BookStoreClientConstants.strERR_CLIENT_REQUEST_TIMEOUT &&
+							  bsEx.getMessage() != BookStoreClientConstants.strERR_CLIENT_REQUEST_EXCEPTION)
 						throw bsEx;
 				}
 				
 				if(!randomServer.equals(masterAddress)) {
 					slaveAddresses.remove(randomServer);
 					if(!slaveAddresses.isEmpty()) {
-						getEditorPicks(numBooks);
+						return this.getEditorPicks(numBooks);
 					}
 				} else {
 					masterUp = false;
 					if(!slaveAddresses.isEmpty()) {
-						getEditorPicks(numBooks);
+						return this.getEditorPicks(numBooks);
 					}
 				}	
 			}

@@ -192,9 +192,15 @@ public class ReplicationAwareBookStoreHTTPProxy implements BookStore {
 				}
 				
 				if(!randomServer.equals(masterAddress)) {
-					slaveAddresses.remove(randomServer);					
+					slaveAddresses.remove(randomServer);
+					if(!slaveAddresses.isEmpty()) {
+						getBooks(isbnSet);
+					}
 				} else {
 					masterUp = false;
+					if(!slaveAddresses.isEmpty()) {
+						getBooks(isbnSet);
+					}
 				}	
 			}
 			
@@ -238,9 +244,15 @@ public class ReplicationAwareBookStoreHTTPProxy implements BookStore {
 				}
 				
 				if(!randomServer.equals(masterAddress)) {
-					slaveAddresses.remove(randomServer);					
+					slaveAddresses.remove(randomServer);
+					if(!slaveAddresses.isEmpty()) {
+						getEditorPicks(numBooks);
+					}
 				} else {
 					masterUp = false;
+					if(!slaveAddresses.isEmpty()) {
+						getEditorPicks(numBooks);
+					}
 				}	
 			}
 

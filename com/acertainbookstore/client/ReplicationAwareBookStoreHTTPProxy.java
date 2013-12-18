@@ -42,6 +42,7 @@ public class ReplicationAwareBookStoreHTTPProxy implements BookStore {
 	private String masterAddress;
 	private String filePath = "src/proxy.properties";
 	private volatile long snapshotId = 0;
+	private boolean masterUp = true;
 	
 	private final static int SECOND=5000; 
 
@@ -111,13 +112,14 @@ public class ReplicationAwareBookStoreHTTPProxy implements BookStore {
 		// and divide the range [0, 1] into masterAddress part and slaveAddress part. 
 		// Firstly, we randomly generate a number in [0, 1], if the number is in slaveAddress
 		// probability part, we randomly return a slaveAddress; otherwise, we return the masterAddress. 
+		
 		int sizeOfSlave = slaveAddresses.size();
 		Random random = new Random();
 		String returnSlaveAddress = new String();
 		float range = (float) 1/(1 + 2*sizeOfSlave);
 		
 		float probability = random.nextFloat();
-		if (probability > range){
+		if (probability > range || masterUp == false){
 			
 			int randomIdx = new Random().nextInt(sizeOfSlave);
 			int i = 0;
@@ -141,21 +143,22 @@ public class ReplicationAwareBookStoreHTTPProxy implements BookStore {
 	}
 
 	public void buyBooks(Set<BookCopy> isbnSet) throws BookStoreException {
-
-		String listISBNsxmlString = BookStoreUtility
-				.serializeObjectToXMLString(isbnSet);
-		Buffer requestContent = new ByteArrayBuffer(listISBNsxmlString);
-
-		BookStoreResult result = null;
-
-		ContentExchange exchange = new ContentExchange();
-		String urlString = getMasterServerAddress() + "/"
-				+ BookStoreMessageTag.BUYBOOKS;
-		exchange.setMethod("POST");
-		exchange.setURL(urlString);
-		exchange.setRequestContent(requestContent);
-		result = BookStoreUtility.SendAndRecv(this.client, exchange);
-		this.setSnapshotId(result.getSnapshotId());
+		if(masterUp) {
+			String listISBNsxmlString = BookStoreUtility
+					.serializeObjectToXMLString(isbnSet);
+			Buffer requestContent = new ByteArrayBuffer(listISBNsxmlString);
+	
+			BookStoreResult result = null;
+	
+			ContentExchange exchange = new ContentExchange();
+			String urlString = getMasterServerAddress() + "/"
+					+ BookStoreMessageTag.BUYBOOKS;
+			exchange.setMethod("POST");
+			exchange.setURL(urlString);
+			exchange.setRequestContent(requestContent);
+			result = BookStoreUtility.SendAndRecv(this.client, exchange);
+			this.setSnapshotId(result.getSnapshotId());
+		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -168,15 +171,33 @@ public class ReplicationAwareBookStoreHTTPProxy implements BookStore {
 		
 		BookStoreResult result = null;
 		long getBooksStart = System.currentTimeMillis();
+		
 		do {
+			
 			ContentExchange exchange = new ContentExchange();
-			String urlString = getReplicaAddress() + "/"
+			String randomServer = getReplicaAddress();
+			String urlString = randomServer + "/"
 					+ BookStoreMessageTag.GETBOOKS;
 			exchange.setMethod("POST");
 			exchange.setURL(urlString);
 			exchange.setRequestContent(requestContent);
-			result = BookStoreUtility.SendAndRecv(this.client, exchange);
-
+			try {
+				result = BookStoreUtility.SendAndRecv(this.client, exchange);
+			} catch (Exception ex) {
+				if (ex instanceof BookStoreException)
+				{
+					BookStoreException bsEx = (BookStoreException) ex;
+					if (bsEx.getMessage() != BookStoreClientConstants.strERR_CLIENT_REQUEST_TIMEOUT)
+						throw bsEx;
+				}
+				
+				if(!randomServer.equals(masterAddress)) {
+					slaveAddresses.remove(randomServer);					
+				} else {
+					masterUp = false;
+				}	
+			}
+			
 			long getBooksEnd = System.currentTimeMillis();
 			if (getBooksEnd - getBooksStart > SECOND)
 				throw new BookStoreException();
@@ -200,12 +221,29 @@ public class ReplicationAwareBookStoreHTTPProxy implements BookStore {
 		BookStoreResult result = null;
 		long getEditorPicksStart = System.currentTimeMillis();
 		do {
-			String urlString = getReplicaAddress() + "/"
+			String randomServer = getReplicaAddress();
+			String urlString = randomServer + "/"
 					+ BookStoreMessageTag.EDITORPICKS + "?"
 					+ BookStoreConstants.BOOK_NUM_PARAM + "="
 					+ urlEncodedNumBooks;
 			exchange.setURL(urlString);
-			result = BookStoreUtility.SendAndRecv(this.client, exchange);
+			try {
+				result = BookStoreUtility.SendAndRecv(this.client, exchange);
+			} catch (Exception ex) {
+				if (ex instanceof BookStoreException)
+				{
+					BookStoreException bsEx = (BookStoreException) ex;
+					if (bsEx.getMessage() != BookStoreClientConstants.strERR_CLIENT_REQUEST_TIMEOUT)
+						throw bsEx;
+				}
+				
+				if(!randomServer.equals(masterAddress)) {
+					slaveAddresses.remove(randomServer);					
+				} else {
+					masterUp = false;
+				}	
+			}
+
 			
 			long getEditorPicksEnd = System.currentTimeMillis();
 			if (getEditorPicksEnd - getEditorPicksStart > SECOND)

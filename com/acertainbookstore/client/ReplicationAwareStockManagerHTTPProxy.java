@@ -40,6 +40,7 @@ public class ReplicationAwareStockManagerHTTPProxy implements StockManager {
 	private String masterAddress;
 	private String filePath = "src/proxy.properties";
 	private long snapshotId = 0;
+	private boolean masterUp = true;
 	
 	private final static int SECOND=5000; 
 
@@ -111,7 +112,7 @@ public class ReplicationAwareStockManagerHTTPProxy implements StockManager {
 		Random random = new Random();
 		String returnSlaveAddress = new String();
 		
-		if (random.nextFloat() > 1/(1 + 2*sizeOfSlave)){
+		if (random.nextFloat() > 1/(1 + 2*sizeOfSlave) || masterUp == false){
 			
 			int randomIdx = new Random().nextInt(sizeOfSlave);
 			int i = 0;
@@ -135,39 +136,41 @@ public class ReplicationAwareStockManagerHTTPProxy implements StockManager {
 	}
 
 	public void addBooks(Set<StockBook> bookSet) throws BookStoreException {
-
-		String listBooksxmlString = BookStoreUtility
-				.serializeObjectToXMLString(bookSet);
-		Buffer requestContent = new ByteArrayBuffer(listBooksxmlString);
-
-		BookStoreResult result = null;
-
-		ContentExchange exchange = new ContentExchange();
-		String urlString = getMasterServerAddress() + "/"
-				+ BookStoreMessageTag.ADDBOOKS;
-		exchange.setMethod("POST");
-		exchange.setURL(urlString);
-		exchange.setRequestContent(requestContent);
-		result = BookStoreUtility.SendAndRecv(this.client, exchange);
-		this.setSnapshotId(result.getSnapshotId());
+		if(masterUp) {
+			String listBooksxmlString = BookStoreUtility
+					.serializeObjectToXMLString(bookSet);
+			Buffer requestContent = new ByteArrayBuffer(listBooksxmlString);
+	
+			BookStoreResult result = null;
+	
+			ContentExchange exchange = new ContentExchange();
+			String urlString = getMasterServerAddress() + "/"
+					+ BookStoreMessageTag.ADDBOOKS;
+			exchange.setMethod("POST");
+			exchange.setURL(urlString);
+			exchange.setRequestContent(requestContent);
+			result = BookStoreUtility.SendAndRecv(this.client, exchange);
+			this.setSnapshotId(result.getSnapshotId());
+		}
 	}
 
 	public void addCopies(Set<BookCopy> bookCopiesSet)
 			throws BookStoreException {
-
-		String listBookCopiesxmlString = BookStoreUtility
-				.serializeObjectToXMLString(bookCopiesSet);
-		Buffer requestContent = new ByteArrayBuffer(listBookCopiesxmlString);
-		BookStoreResult result = null;
-
-		ContentExchange exchange = new ContentExchange();
-		String urlString = getMasterServerAddress() + "/"
-				+ BookStoreMessageTag.ADDCOPIES;
-		exchange.setMethod("POST");
-		exchange.setURL(urlString);
-		exchange.setRequestContent(requestContent);
-		result = BookStoreUtility.SendAndRecv(this.client, exchange);
-		this.setSnapshotId(result.getSnapshotId());
+		if(masterUp) {
+			String listBookCopiesxmlString = BookStoreUtility
+					.serializeObjectToXMLString(bookCopiesSet);
+			Buffer requestContent = new ByteArrayBuffer(listBookCopiesxmlString);
+			BookStoreResult result = null;
+	
+			ContentExchange exchange = new ContentExchange();
+			String urlString = getMasterServerAddress() + "/"
+					+ BookStoreMessageTag.ADDCOPIES;
+			exchange.setMethod("POST");
+			exchange.setURL(urlString);
+			exchange.setRequestContent(requestContent);
+			result = BookStoreUtility.SendAndRecv(this.client, exchange);
+			this.setSnapshotId(result.getSnapshotId());
+		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -177,11 +180,26 @@ public class ReplicationAwareStockManagerHTTPProxy implements StockManager {
 		long getBooksStart = System.currentTimeMillis();
 		do {
 			ContentExchange exchange = new ContentExchange();
-			String urlString = getReplicaAddress() + "/"
+			String randomServer = getReplicaAddress();
+			String urlString = randomServer + "/"
 					+ BookStoreMessageTag.LISTBOOKS;
 
 			exchange.setURL(urlString);
-			result = BookStoreUtility.SendAndRecv(this.client, exchange);
+			try {
+				result = BookStoreUtility.SendAndRecv(this.client, exchange);
+			} catch (Exception ex) {
+				if (ex instanceof BookStoreException)
+				{
+					BookStoreException bsEx = (BookStoreException) ex;
+					if (bsEx.getMessage() != BookStoreClientConstants.strERR_CLIENT_REQUEST_TIMEOUT)
+						throw bsEx;
+				}
+				if(!randomServer.equals(masterAddress)) {
+					slaveAddresses.remove(randomServer);					
+				} else {
+					masterUp = false;
+				}
+			}
 			
 			long getBooksEnd = System.currentTimeMillis();
 			if (getBooksEnd - getBooksStart > SECOND)
@@ -193,21 +211,22 @@ public class ReplicationAwareStockManagerHTTPProxy implements StockManager {
 
 	public void updateEditorPicks(Set<BookEditorPick> editorPicksValues)
 			throws BookStoreException {
-
-		String xmlStringEditorPicksValues = BookStoreUtility
-				.serializeObjectToXMLString(editorPicksValues);
-		Buffer requestContent = new ByteArrayBuffer(xmlStringEditorPicksValues);
-
-		BookStoreResult result = null;
-		ContentExchange exchange = new ContentExchange();
-
-		String urlString = getMasterServerAddress() + "/"
-				+ BookStoreMessageTag.UPDATEEDITORPICKS + "?";
-		exchange.setMethod("POST");
-		exchange.setURL(urlString);
-		exchange.setRequestContent(requestContent);
-		result = BookStoreUtility.SendAndRecv(this.client, exchange);
-		this.setSnapshotId(result.getSnapshotId());
+		if(masterUp) {
+			String xmlStringEditorPicksValues = BookStoreUtility
+					.serializeObjectToXMLString(editorPicksValues);
+			Buffer requestContent = new ByteArrayBuffer(xmlStringEditorPicksValues);
+	
+			BookStoreResult result = null;
+			ContentExchange exchange = new ContentExchange();
+	
+			String urlString = getMasterServerAddress() + "/"
+					+ BookStoreMessageTag.UPDATEEDITORPICKS + "?";
+			exchange.setMethod("POST");
+			exchange.setURL(urlString);
+			exchange.setRequestContent(requestContent);
+			result = BookStoreUtility.SendAndRecv(this.client, exchange);
+			this.setSnapshotId(result.getSnapshotId());
+		}
 	}
 
 	public long getSnapshotId() {

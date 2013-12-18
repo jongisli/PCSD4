@@ -18,7 +18,7 @@ import com.acertainbookstore.interfaces.BookStore;
 import com.acertainbookstore.interfaces.StockManager;
 import com.acertainbookstore.utils.BookStoreException;
 
-public class MasterFailTestGetbooks {
+public class TestGetBooks {
 
 	public static void main(String[] args) {
 

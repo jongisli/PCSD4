@@ -10,6 +10,7 @@ import java.util.Set;
 import org.junit.BeforeClass;
 
 import com.acertainbookstore.business.Book;
+import com.acertainbookstore.business.BookCopy;
 import com.acertainbookstore.business.ImmutableStockBook;
 import com.acertainbookstore.business.StockBook;
 import com.acertainbookstore.client.ReplicationAwareBookStoreHTTPProxy;
@@ -18,7 +19,7 @@ import com.acertainbookstore.interfaces.BookStore;
 import com.acertainbookstore.interfaces.StockManager;
 import com.acertainbookstore.utils.BookStoreException;
 
-public class MasterFailTestAddbooks {
+public class TestBuyBooks {
 
 	public static void main(String[] args) {
 
@@ -33,23 +34,12 @@ public class MasterFailTestAddbooks {
 		}
 		
 		int testISBN = 400;
-		int amountOfBooks = 100;
-		Set<StockBook> booksToAdd = new HashSet<StockBook>();
-		booksToAdd.add(new ImmutableStockBook(testISBN,
-				"Egils saga Skalla-Gr’mssonar",
-				"Viking Vikingsson", (float) 100, amountOfBooks, 0, 0, 0,
-				false));
-		int testISBN2 = 100;
-		int amountOfBooks2 = 1;
-		Set<StockBook> booksToAdd2 = new HashSet<StockBook>();
-		booksToAdd.add(new ImmutableStockBook(testISBN2,
-				"Principles of Computer System and Design",
-				"Vivek", (float) 100, amountOfBooks2, 0, 0, 0,
-				false));
-		
+		int buyCopies = 2;
+
+		Set<BookCopy> booksToBuy = new HashSet<BookCopy>();
+		booksToBuy.add(new BookCopy(testISBN, buyCopies));
 		try {
-			storeManager.addBooks(booksToAdd);
-			System.out.println("Adding books sucessfully.");
+			client.buyBooks(booksToBuy);
 		} catch (BookStoreException e) {
 			e.printStackTrace();
 			fail();

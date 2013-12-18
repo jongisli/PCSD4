@@ -2,7 +2,7 @@ package com.acertainbookstore.business;
 
 import java.util.Set;
 import java.util.concurrent.Callable;
-
+import java.util.concurrent.ExecutionException;
 
 import com.acertainbookstore.server.ReplicationHTTPProxy;
 import com.acertainbookstore.utils.BookStoreMessageTag;
@@ -30,6 +30,7 @@ public class CertainBookStoreReplicationTask implements
 		BookStoreMessageTag messageTag = request.getMessageType();
 		ReplicationResult replicationResult = new ReplicationResult(slaveServer, false);
 		
+		try {
 		switch (messageTag)
 		{
 			case ADDBOOKS: {
@@ -54,6 +55,15 @@ public class CertainBookStoreReplicationTask implements
 			}
 			default:
 				break;
+		}
+		}
+		catch(Exception ex)
+		{
+			if (ex instanceof InterruptedException)
+				throw ex;
+			if (ex instanceof ExecutionException)
+				throw ex;
+			return new ReplicationResult(slaveServer, false);
 		}
 		
 		return replicationResult;
